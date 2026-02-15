@@ -66,7 +66,7 @@ function loadFiles(): FileItem[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as FileItem[];
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch {
     // ignore
@@ -315,8 +315,10 @@ const Files = () => {
   };
 
   const deleteFile = (id: string) => {
-    setFiles(files.filter((f) => f.id !== id));
+    const nextFiles = files.filter((f) => f.id !== id);
+    setFiles(nextFiles);
     setDeleteId(null);
+    saveFiles(nextFiles);
     deleteBlob(id).catch(() => {});
   };
   const fileToDelete = deleteId ? files.find((f) => f.id === deleteId) : null;
