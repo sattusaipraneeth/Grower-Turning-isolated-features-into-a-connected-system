@@ -1,0 +1,263 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* Green Home Design System - Nature-inspired, calm, cozy */
+
+@layer base {
+  :root {
+    --background: 140 20% 98%;
+    --foreground: 150 30% 15%;
+
+    --card: 140 25% 97%;
+    --card-foreground: 150 30% 15%;
+
+    --popover: 140 25% 97%;
+    --popover-foreground: 150 30% 15%;
+
+    --primary: 145 25% 36%;
+    --primary-foreground: 140 20% 98%;
+
+    --secondary: 38 35% 92%;
+    --secondary-foreground: 150 30% 15%;
+
+    --muted: 140 15% 93%;
+    --muted-foreground: 150 10% 45%;
+
+    --accent: 38 60% 55%;
+    --accent-foreground: 150 30% 15%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 140 15% 88%;
+    --input: 140 15% 88%;
+    --ring: 145 25% 36%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 145 30% 12%;
+    --sidebar-foreground: 140 20% 90%;
+    --sidebar-primary: 145 35% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 145 25% 20%;
+    --sidebar-accent-foreground: 140 20% 90%;
+    --sidebar-border: 145 25% 18%;
+    --sidebar-ring: 145 35% 50%;
+
+    /* Custom Green Home tokens */
+    --sage: 145 25% 36%;
+    --sage-light: 145 30% 55%;
+    --sage-dark: 145 30% 25%;
+    --forest: 145 35% 18%;
+    --forest-deep: 145 40% 10%;
+    --beige: 38 35% 92%;
+    --beige-warm: 35 40% 85%;
+    --amber: 38 75% 55%;
+    --amber-glow: 38 80% 65%;
+    --moss: 140 25% 45%;
+    --leaf: 120 35% 45%;
+    /* Role: Focus / Deep Work */
+    --blue: 220 90% 55%;
+    --blue-light: 220 95% 65%;
+    --blue-dark: 220 80% 40%;
+    
+    /* Glassmorphism */
+    --glass-bg: 140 25% 97% / 0.7;
+    --glass-border: 140 15% 88% / 0.5;
+    
+    /* Shadows */
+    --shadow-soft: 0 4px 24px -4px hsl(145 30% 15% / 0.08);
+    --shadow-card: 0 2px 12px -2px hsl(145 30% 15% / 0.06);
+    --shadow-glow: 0 0 20px hsl(145 35% 50% / 0.15);
+  }
+
+  .dark {
+    --background: 145 35% 8%;
+    --foreground: 140 20% 92%;
+
+    --card: 145 30% 12%;
+    --card-foreground: 140 20% 92%;
+
+    --popover: 145 30% 12%;
+    --popover-foreground: 140 20% 92%;
+
+    --primary: 145 35% 50%;
+    --primary-foreground: 145 40% 10%;
+
+    --secondary: 145 25% 18%;
+    --secondary-foreground: 140 20% 90%;
+
+    --muted: 145 25% 15%;
+    --muted-foreground: 140 15% 60%;
+
+    --accent: 38 65% 55%;
+    --accent-foreground: 145 40% 10%;
+
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 145 25% 18%;
+    --input: 145 25% 18%;
+    --ring: 145 35% 50%;
+
+    --sidebar-background: 145 40% 6%;
+    --sidebar-foreground: 140 20% 85%;
+    --sidebar-primary: 145 40% 55%;
+    --sidebar-primary-foreground: 145 40% 10%;
+    --sidebar-accent: 145 30% 14%;
+    --sidebar-accent-foreground: 140 20% 90%;
+    --sidebar-border: 145 30% 12%;
+    --sidebar-ring: 145 40% 55%;
+
+    /* Dark mode custom tokens */
+    --sage: 145 35% 50%;
+    --sage-light: 145 40% 60%;
+    --sage-dark: 145 30% 35%;
+    --forest: 145 35% 18%;
+    --forest-deep: 145 40% 6%;
+    --beige: 38 25% 20%;
+    --beige-warm: 35 30% 25%;
+    --amber: 38 75% 55%;
+    --amber-glow: 38 80% 60%;
+    --moss: 140 30% 50%;
+    --leaf: 120 40% 50%;
+    /* Role: Focus / Deep Work (dark) */
+    --blue: 220 80% 60%;
+    --blue-light: 220 85% 70%;
+    --blue-dark: 220 70% 45%;
+    
+    --glass-bg: 145 30% 12% / 0.8;
+    --glass-border: 145 25% 20% / 0.5;
+    
+    --shadow-soft: 0 4px 24px -4px hsl(0 0% 0% / 0.4);
+    --shadow-card: 0 2px 12px -2px hsl(0 0% 0% / 0.3);
+    --shadow-glow: 0 0 30px hsl(145 40% 50% / 0.2);
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    background-color: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--border) / 0.5);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-card);
+  }
+  
+  .glass-card-hover {
+    background-color: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--border) / 0.5);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease;
+}
+
+.glass-card-hover:hover {
+    box-shadow: 0 10px 30px -10px hsl(var(--primary) / 0.2);
+    border-color: hsl(var(--primary) / 0.2);
+  }
+  
+  .glow-text {
+    text-shadow: 0 0 20px hsl(var(--primary) / 0.4);
+  }
+  
+  .gradient-text {
+    background-image: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+  
+  .btn-glow {
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+  
+  .btn-glow:hover {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.5);
+  }
+
+  .progress-ring {
+border-radius: 9999px;
+    background: conic-gradient(
+      hsl(var(--primary)) var(--progress, 0%),
+      hsl(var(--muted)) var(--progress, 0%)
+    );
+  }
+
+  .nature-pattern {
+    background-image: radial-gradient(circle at 20% 80%, hsl(var(--sage) / 0.05) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 20%, hsl(var(--moss) / 0.05) 0%, transparent 50%),
+                      radial-gradient(circle at 40% 40%, hsl(var(--leaf) / 0.03) 0%, transparent 40%);
+  }
+
+  .streak-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: linear-gradient(135deg, hsl(var(--amber) / 0.2), hsl(var(--amber) / 0.1));
+    color: hsl(var(--amber));
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-pulse-soft {
+    animation: pulse-soft 3s ease-in-out infinite;
+  }
+  
+  .animate-grow {
+    animation: grow 0.5s ease-out forwards;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  
+  @keyframes grow {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+}
