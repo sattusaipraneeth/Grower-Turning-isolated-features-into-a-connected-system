@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Trash2, Pencil } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Trash2, Pencil, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -22,6 +22,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -36,6 +39,9 @@ interface Event {
   title: string;
   date: Date;
   time: string;
+  startTime?: string;
+  endTime?: string;
+  description?: string;
   type: "event" | "deadline" | "habit" | "milestone" | "work/study";
   color: string;
   seriesId?: string;
@@ -45,7 +51,7 @@ interface Event {
     byWeekday?: number[]; // 0-6
     until?: string; // ISO date string (yyyy-MM-dd)
   };
-  exceptions?: Array<{ dateKey: string; cancelled?: boolean; override?: Partial<Pick<Event, "title" | "time" | "type" | "color">> }>;
+  exceptions?: Array<{ dateKey: string; cancelled?: boolean; override?: Partial<Pick<Event, "title" | "time" | "type" | "color" | "startTime" | "endTime" | "description">> }>;
 }
 
 const eventsData: Event[] = [];
@@ -80,6 +86,27 @@ const formatDateForInput = (d: Date) => {
 
 const STORAGE_KEY = "grower:entities:calendar";
 
+function WheelColumn({ values, value, onChange }: { values: string[]; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="w-16">
+      <ScrollArea className="h-32 rounded-md border">
+        <div className="py-1">
+          {values.map((v) => (
+            <button
+              key={v}
+              type="button"
+              className={cn("block w-full px-2 py-1 text-sm text-center rounded-md", value === v ? "bg-primary text-primary-foreground" : "hover:bg-muted")}
+              onClick={() => onChange(v)}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
 const CalendarPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -89,7 +116,15 @@ const CalendarPage = () => {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDateStr, setNewDateStr] = useState("");
-  const [newTime, setNewTime] = useState("");
+  const [newTimeRange, setNewTimeRange] = useState("");
+  const [timePopoverOpen, setTimePopoverOpen] = useState(false);
+  const [startH, setStartH] = useState<string>("");
+  const [startM, setStartM] = useState<string>("");
+  const [startPeriod, setStartPeriod] = useState<"" | "AM" | "PM">("");
+  const [endH, setEndH] = useState<string>("");
+  const [endM, setEndM] = useState<string>("");
+  const [endPeriod, setEndPeriod] = useState<"" | "AM" | "PM">("");
+  const [newDescription, setNewDescription] = useState("");
   const [newType, setNewType] = useState<Event["type"]>("event");
   const [newColor, setNewColor] = useState("bg-primary");
   const [editEventId, setEditEventId] = useState<string | null>(null);
@@ -180,7 +215,7 @@ const CalendarPage = () => {
     const ex = (ev.exceptions || []).find(x => x.dateKey === dk && x.override);
     if (!ex || !ex.override) return ev;
     const patch = ex.override;
-    return { ...ev, title: patch.title ?? ev.title, time: patch.time ?? ev.time, type: patch.type ?? ev.type, color: patch.color ?? ev.color };
+    return { ...ev, title: patch.title ?? ev.title, time: patch.time ?? ev.time, type: patch.type ?? ev.type, color: patch.color ?? ev.color, startTime: patch.startTime ?? ev.startTime, endTime: patch.endTime ?? ev.endTime, description: patch.description ?? ev.description };
   };
   const expandOccurrences = (ev: Event, start: Date, end: Date): Array<Event & { occurrenceDate: Date; sourceId: string }> => {
     const out: Array<Event & { occurrenceDate: Date; sourceId: string }> = [];
@@ -306,7 +341,10 @@ const CalendarPage = () => {
     const base = selectedDate ?? currentDate;
     setNewDateStr(formatDateForInput(base));
     setNewTitle("");
-    setNewTime("");
+    setNewTimeRange("");
+    setStartH(""); setStartM(""); setStartPeriod("");
+    setEndH(""); setEndM(""); setEndPeriod("");
+    setNewDescription("");
     setNewType("event");
     setNewColor("bg-primary");
     setRecurrenceFreq("NONE");
@@ -321,7 +359,21 @@ const CalendarPage = () => {
     setEditEventId(event.id);
     setNewDateStr(formatDateForInput(event.date));
     setNewTitle(event.title);
-    setNewTime(event.time || "");
+    setNewTimeRange(event.startTime && event.endTime ? `${event.startTime} → ${event.endTime}` : event.time || "");
+    const toParts = (t?: string) => {
+      if (!t) return { h12: "", m: "", s: "", p: "" as "" | "AM" | "PM" };
+      const mm = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(t);
+      if (!mm) return { h12: "", m: "", s: "", p: "" as "" | "AM" | "PM" };
+      const hh = Number(mm[1]);
+      const p = hh >= 12 ? "PM" : "AM";
+      const h12 = String(((hh + 11) % 12) + 1).padStart(2, "0");
+      return { h12, m: mm[2], s: mm[3] ?? "00", p };
+    };
+    const sp = toParts(event.startTime);
+    const ep = toParts(event.endTime);
+    setStartH(sp.h12); setStartM(sp.m); setStartPeriod(sp.p as "" | "AM" | "PM");
+    setEndH(ep.h12); setEndM(ep.m); setEndPeriod(ep.p as "" | "AM" | "PM");
+    setNewDescription(event.description || "");
     setNewType(event.type);
     setNewColor(event.color);
     setRecurrenceFreq(event.recurrence?.freq ?? "NONE");
@@ -337,6 +389,11 @@ const CalendarPage = () => {
     if (!newTitle.trim()) return;
     const [y, m, d] = newDateStr.split("-").map(Number);
     const date = new Date(y, (m ?? 1) - 1, d ?? 1);
+    const mRange = /^\s*(\d{2}):(\d{2}):(\d{2})\s*→\s*(\d{2}):(\d{2}):(\d{2})\s*$/.exec(
+      newTimeRange.replace(/\s*(AM|PM)\s*/gi, "").trim()
+    );
+    const sTime = mRange ? `${mRange[1]}:${mRange[2]}:${mRange[3]}` : "";
+    const eTime = mRange ? `${mRange[4]}:${mRange[5]}:${mRange[6]}` : "";
     if (editEventId) {
       setEvents(events.map((ev) => {
         if (ev.id !== editEventId) return ev;
@@ -351,7 +408,7 @@ const CalendarPage = () => {
           if (editScope === "occurrence") {
             const ex = ev.exceptions || [];
             const idx = ex.findIndex(x => x.dateKey === dk);
-            const override = { title: newTitle.trim(), time: newTime.trim(), type: newType, color: newColor };
+            const override = { title: newTitle.trim(), time: newTimeRange.trim(), type: newType, color: newColor, startTime: sTime, endTime: eTime, description: newDescription.trim() };
             if (idx >= 0) ex[idx] = { ...ex[idx], override };
             else ex.push({ dateKey: dk, override });
             return { ...ev, exceptions: ex };
@@ -364,7 +421,10 @@ const CalendarPage = () => {
               id: crypto.randomUUID?.() ?? String(Date.now()),
               title: newTitle.trim(),
               date,
-              time: newTime.trim(),
+              time: newTimeRange.trim(),
+              startTime: sTime,
+              endTime: eTime,
+              description: newDescription.trim(),
               type: newType,
               color: newColor,
               seriesId: ev.seriesId || ev.id,
@@ -375,7 +435,7 @@ const CalendarPage = () => {
             return updatedSeries; // placeholder; actual setEvents includes new series
           }
         }
-        return { ...ev, title: newTitle.trim(), date, time: newTime.trim(), type: newType, color: newColor, recurrence: nextRecurrence, seriesId: ev.seriesId };
+        return { ...ev, title: newTitle.trim(), date, time: newTimeRange.trim(), startTime: sTime, endTime: eTime, description: newDescription.trim(), type: newType, color: newColor, recurrence: nextRecurrence, seriesId: ev.seriesId };
       }));
     } else {
 
@@ -383,7 +443,10 @@ const CalendarPage = () => {
         id: crypto.randomUUID?.() ?? String(Date.now()),
         title: newTitle.trim(),
         date,
-        time: newTime.trim(),
+        time: newTimeRange.trim(),
+        startTime: sTime,
+        endTime: eTime,
+        description: newDescription.trim(),
         type: newType,
         color: newColor,
         seriesId: undefined,
@@ -404,6 +467,7 @@ const CalendarPage = () => {
   const [deleteEventId, setDeleteEventId] = useState<string | null>(null);
   const eventToDelete = deleteEventId ? events.find((e) => e.id === deleteEventId) : null;
   const [deleteScope, setDeleteScope] = useState<"occurrence" | "future" | "series">("series");
+  const [expandedDesc, setExpandedDesc] = useState<Record<string, boolean>>({});
   const deleteEvent = (id: string) => {
     const ev = events.find(e => e.id === id);
     if (!ev) {
@@ -482,14 +546,77 @@ const CalendarPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="event-time">Time (optional)</Label>
-                <Input
-                  id="event-time"
-                  type="time"
-                  value={newTime}
-                  onChange={(e) => setNewTime(e.target.value)}
-                />
+                <Label htmlFor="event-time-range">Time Range</Label>
+                <Popover open={timePopoverOpen} onOpenChange={setTimePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <div className="relative">
+                      <Input
+                        id="event-time-range"
+                        type="text"
+                        readOnly
+                        placeholder="--:-- -- → --:-- --"
+                        value={newTimeRange}
+                      />
+                      <Clock className="w-4 h-4 text-muted-foreground absolute right-2 top-2.5 pointer-events-none" />
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[360px]">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Start</Label>
+                        <div className="flex gap-2">
+                          <WheelColumn values={Array.from({ length: 12 }).map((_, i) => String(i + 1).padStart(2, "0"))} value={startH} onChange={setStartH} />
+                          <WheelColumn values={Array.from({ length: 60 }).map((_, i) => String(i).padStart(2, "0"))} value={startM} onChange={setStartM} />
+                          <WheelColumn values={["AM", "PM"]} value={startPeriod} onChange={(v) => setStartPeriod(v as "AM" | "PM")} />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">End</Label>
+                        <div className="flex gap-2">
+                          <WheelColumn values={Array.from({ length: 12 }).map((_, i) => String(i + 1).padStart(2, "0"))} value={endH} onChange={setEndH} />
+                          <WheelColumn values={Array.from({ length: 60 }).map((_, i) => String(i).padStart(2, "0"))} value={endM} onChange={setEndM} />
+                          <WheelColumn values={["AM", "PM"]} value={endPeriod} onChange={(v) => setEndPeriod(v as "AM" | "PM")} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={() => {
+                        setStartH(""); setStartM(""); setStartPeriod("");
+                        setEndH(""); setEndM(""); setEndPeriod("");
+                        setNewTimeRange("");
+                        setTimePopoverOpen(false);
+                      }}>Clear</Button>
+                      <Button type="button" onClick={() => {
+                        const to24 = (h: string, m: string, p: "AM" | "PM") => {
+                          if (!h || !m || !p) return "";
+                          let hh = Number(h);
+                          if (p === "PM" && hh !== 12) hh += 12;
+                          if (p === "AM" && hh === 12) hh = 0;
+                          const H = String(hh).padStart(2, "0");
+                          return `${H}:${m}:00`;
+                        };
+                        const st = startPeriod ? to24(startH, startM, startPeriod as "AM" | "PM") : "";
+                        const et = endPeriod ? to24(endH, endM, endPeriod as "AM" | "PM") : "";
+                        const disp = (h: string, m: string, p: "" | "AM" | "PM") => (h && m && p) ? `${h}:${m} ${p}` : "";
+                        const valDisp = (startH && startM && startPeriod && endH && endM && endPeriod)
+                          ? `${disp(startH, startM, startPeriod)} → ${disp(endH, endM, endPeriod)}`
+                          : "";
+                        setNewTimeRange(valDisp);
+                        setTimePopoverOpen(false);
+                      }}>Done</Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="event-description">Description (optional)</Label>
+              <Textarea
+                id="event-description"
+                placeholder="Details"
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>Type</Label>
@@ -558,10 +685,6 @@ const CalendarPage = () => {
                     </div>
                   </div>
                 )}
-                <div className="col-span-2">
-                  <Label className="text-xs">Until (optional)</Label>
-                  <Input type="date" value={recurrenceUntilStr} onChange={(e) => setRecurrenceUntilStr(e.target.value)} />
-                </div>
               </div>
             </div>
             {editEventId && (recurrenceFreq !== "NONE") && selectedDate && (
@@ -702,6 +825,30 @@ const CalendarPage = () => {
                         {typeLabels[event.type]}
                       </span>
                     </div>
+                    {event.description && (
+                      <div className="mt-1">
+                        {expandedDesc[event.id] || event.description.length <= 160 ? (
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
+                            {event.description}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
+                            {event.description.slice(0, 160)}…
+                          </p>
+                        )}
+                        {event.description.length > 160 && (
+                          <button
+                            type="button"
+                            className="text-xs text-primary hover:underline mt-0.5"
+                            onClick={() =>
+                              setExpandedDesc((prev) => ({ ...prev, [event.id]: !prev[event.id] }))
+                            }
+                          >
+                            {expandedDesc[event.id] ? "Less" : "More"}
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <button
                     type="button"
