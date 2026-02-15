@@ -9,6 +9,9 @@ type CalendarEvent = {
   title: string;
   date: string;
   time: string;
+  startTime?: string;
+  endTime?: string;
+  description?: string;
   type: string;
   color: string;
 };
@@ -63,22 +66,22 @@ export function CalendarWidget() {
   }, [events, today]);
 
   return (
-    <div className="glass-card p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold text-foreground flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-primary" />
+    <div className="glass-card p-2">
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="font-semibold text-foreground flex items-center gap-1.5 text-[13px]">
+          <Calendar className="w-3.5 h-3.5 text-primary" />
           Today
         </h2>
         <Link 
           to="/calendar"
-          className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+          className="text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
         >
           Calendar →
         </Link>
       </div>
 
       {/* Mini Week View */}
-      <div className="flex justify-between mb-4 p-2 bg-muted/50 rounded-xl">
+      <div className="flex justify-between mb-2 p-1 bg-muted/50 rounded-xl">
         {days.map((day, index) => {
           const isToday = index === currentDay;
           const date = new Date(today);
@@ -87,12 +90,12 @@ export function CalendarWidget() {
           return (
             <div 
               key={day}
-              className={`flex flex-col items-center p-1.5 rounded-lg transition-colors ${
+              className={`flex flex-col items-center p-1 rounded-lg transition-colors ${
                 isToday ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
               }`}
             >
               <span className="text-[10px] font-medium">{day}</span>
-              <span className={`text-sm font-semibold ${isToday ? '' : 'text-foreground'}`}>
+              <span className={`text-xs font-semibold ${isToday ? '' : 'text-foreground'}`}>
                 {date.getDate()}
               </span>
             </div>
@@ -101,19 +104,19 @@ export function CalendarWidget() {
       </div>
 
       {/* Upcoming Events */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         {upcomingEvents.length === 0 ? (
-          <div className="p-3 rounded-lg bg-muted/40 text-xs text-muted-foreground">No upcoming events</div>
+          <div className="p-2 rounded-lg bg-muted/40 text-[11px] text-muted-foreground">No upcoming events</div>
         ) : (
           upcomingEvents.map((event) => (
             <div
               key={event.id}
-              className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+              className="flex items-center gap-2 p-1 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
             >
-              <div className={`w-2 h-8 rounded-full ${event.color || typeColors[event.type as keyof typeof typeColors]?.split(" ")[0] || "bg-primary/20"}`} />
+              <div className={`w-1.5 h-5 rounded-full ${event.color || typeColors[event.type as keyof typeof typeColors]?.split(" ")[0] || "bg-primary/20"}`} />
               <div className="flex-1">
-                <p className="font-medium text-sm text-foreground">{event.title}</p>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <p className="font-medium text-xs text-foreground">{event.title}</p>
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {event.time || "All day"}
                 </p>
