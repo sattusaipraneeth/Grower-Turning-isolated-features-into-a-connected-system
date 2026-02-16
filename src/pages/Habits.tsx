@@ -337,7 +337,10 @@ const Habits = () => {
                           : "bg-muted text-muted-foreground"
                       )}
                     >
-                      {['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}
+                      {(() => {
+                        const d = addDays(new Date(), -(6 - i));
+                        return ["S", "M", "T", "W", "T", "F", "S"][d.getDay()];
+                      })()}
                     </div>
                   ))}
                 </div>
