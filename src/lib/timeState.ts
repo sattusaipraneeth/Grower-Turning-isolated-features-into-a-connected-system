@@ -20,7 +20,10 @@ const VIEWDATE_KEY = "grower:viewDate:selected";
 
 export const todayKey = () => format(new Date(), "yyyy-MM-dd");
 export const dateKey = (d: Date) => format(d, "yyyy-MM-dd");
-export const parseDateKey = (key: DateKey) => parseISO(key);
+export const parseDateKey = (key: DateKey) => {
+  const [y, m, d] = key.split("-").map((x) => parseInt(x, 10));
+  return new Date(y, (m || 1) - 1, d || 1);
+};
 export const startOfIsoWeek = (d = new Date()) => startOfWeek(d, { weekStartsOn: 1 });
 export const selectedDateKey = (): DateKey => {
   try {
